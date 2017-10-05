@@ -1,0 +1,13 @@
+package SQL;
+
+
+public class PossibleCalc {
+	public String getHomeAddress(Account acct) {
+		return acct.getHomeAddress();
+	}
+	public String getCurLocation(Transaction tran) {
+		return tran.getLocation();
+	}
+	
+	
+}

@@ -1,0 +1,94 @@
+package hybrid;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map.Entry;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.io.LongWritable;
+/**
+ * Created by hongleyou on 2017/4/13.
+ */
+public class HyBrid {
+
+    public static class MyReducer extends Reducer<PairStructure, IntWritable, Text, Text> {
+
+        @Override
+        protected void reduce(PairStructure item, Iterable<IntWritable> values,
+                              Reducer<PairStructure, IntWritable, Text, Text>.Context context)
+                throws IOException, InterruptedException {
+            int sum = 0;
+            for (IntWritable val : values) {
+                sum += val.get();
+            }
+            String s = "(" + item.key1 + ", " + item.key2 + ")";
+            context.write(new Text(s), new Text(sum+""));
+        }
+    }
+
+    public static class MyMapper extends Mapper<LongWritable, Text, PairStructure, IntWritable> {
+
+        HashMap<PairStructure, Integer> hashmap;
+
+        @Override
+        protected void setup(
+                Mapper<LongWritable, Text, PairStructure, IntWritable>.Context context)
+                throws IOException, InterruptedException {
+            hashmap = new HashMap<PairStructure, Integer>();
+        }
+
+        @Override
+        protected void map(LongWritable key, Text value,
+                           Mapper<LongWritable, Text, PairStructure, IntWritable>.Context context)
+                throws IOException, InterruptedException {
+            String line = value.toString().trim();
+            String[] strs = line.split("\\s+");
+            System.out.println(strs.length);
+
+            for (int i = 0; i < strs.length; i++) {
+                for (int j = i + 1; j < strs.length && !strs[i].equals(strs[j]); j++) {
+                    if (hashmap.containsKey(new PairStructure(strs[i], strs[j]))) {
+                        hashmap.put(new PairStructure(strs[i], strs[j]), hashmap.get(new PairStructure(strs[i], strs[j])) + 1);
+                    } else {
+                        hashmap.put(new PairStructure(strs[i], strs[j]), 1);
+                    }
+                }
+            }
+        }
+
+        @Override
+        protected void cleanup(
+                Mapper<LongWritable, Text, PairStructure, IntWritable>.Context context)
+                throws IOException, InterruptedException {
+            super.cleanup(context);
+            for (Entry<PairStructure, Integer> entry : hashmap.entrySet()) {
+                context.write(entry.getKey(), new IntWritable(entry.getValue()));
+            }
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        Configuration conf = new Configuration();
+        Job job = Job.getInstance(conf, "hybrid");
+        job.setJarByClass(HyBrid.class);
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+        job.setMapperClass(MyMapper.class);
+        job.setReducerClass(MyReducer.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
+        job.setMapOutputKeyClass(PairStructure.class);
+        job.setMapOutputValueClass(IntWritable.class);
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+
+    }
+}
+

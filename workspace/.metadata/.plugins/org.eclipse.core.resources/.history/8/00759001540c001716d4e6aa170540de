@@ -1,0 +1,84 @@
+package SQL;
+
+import java.util.ArrayList;
+
+
+public class PossibleCalc {
+	
+	public int calcP1(Account acct, Transaction curTran) {
+		int factor1;
+		String strHomeAddress = acct.getHomeAddress();
+		String strLoc = curTran.getLocation();
+		
+		String[] address = strHomeAddress.split("|");
+		//Same city
+		if(strLoc.toUpperCase().contains(address[1].toUpperCase())) {
+			factor1 = 0;
+		}
+		else if(strLoc.toUpperCase().contains(address[3].toUpperCase())) { //Same country
+			factor1 = 5;
+		}
+		else
+			factor1 = 11;
+		
+		return factor1;
+	}
+	
+	public int calcP2(Transaction curTran, ArrayList<Transaction> tranList) {
+		int factor2 = -1;
+		boolean bolInLocationList = false;
+		for(Transaction t : tranList) {
+			if(t.getLocation().equals(curTran.getLocation())) {
+				factor2 = 0;
+				bolInLocationList = true;
+				break;
+			}
+		}
+		
+		if(!bolInLocationList) {
+			for(Transaction t1 : tranList) {
+				String[] strCurLocation = curTran.getLocation().split("|");
+				String[] strLoc = t1.getLocation().split("|");
+				
+				//Same country
+				if(strCurLocation[3].toUpperCase().equalsIgnoreCase(strLoc[3].toUpperCase())) {
+					factor2 = 5;
+				}
+				else
+					factor2 = 11;
+			}
+		}
+			
+		return factor2;
+	}
+	
+	public int calcP3(Transaction curTran, ArrayList<Transaction> tranList) {
+		int factor3 = -1;
+		float sum = 0;
+		
+		for(Transaction t : tranList) {
+			sum += t.getAmount();
+		}
+		
+		float avg = sum / tranList.size();
+		if(curTran.getAmount() >= avg)
+			factor3 = 5;
+		else
+			factor3 = 0;
+		
+			
+		return factor3;
+	}
+	
+	public String calcTotalPossibility(Account acct, Transaction curTran, ArrayList<Transaction> tranList) {
+
+		int possible1 = calcP1(acct, curTran);
+		int possible2 = calcP2(curTran, tranList);
+		int possible3 = calcP2(curTran, tranList);
+		
+		if(possible1 + possible2 + possible3 <= 10)
+			return "Enriched";
+		
+		return "Fraud";
+	}
+}

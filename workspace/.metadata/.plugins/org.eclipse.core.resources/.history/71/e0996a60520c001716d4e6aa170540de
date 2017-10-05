@@ -1,0 +1,43 @@
+package SQL;
+
+
+public class PossibleCalc {
+	
+	public int calcP1(Account acct, Transaction tran) {
+		int factor1;
+		String strHomeAddress = acct.getHomeAddress();
+		String strLoc = tran.getLocation();
+		
+		String[] address = strHomeAddress.split("|");
+		//Same city
+		if(strLoc.toUpperCase().contains(address[1].toUpperCase())) {
+			factor1 = 0;
+		}
+		else if(strLoc.toUpperCase().contains(address[3].toUpperCase())) { //Same country
+			factor1 = 5;
+		}
+		else
+			factor1 = 11;
+		
+		return factor1;
+	}
+	
+	public int calcP2(Account acct, Transaction tran) {
+		int factor2;
+		String strHomeAddress = acct.getHomeAddress();
+		String strLoc = tran.getLocation();
+		
+		String[] address = strHomeAddress.split("|");
+		//Same city
+		if(strLoc.toUpperCase().contains(address[1].toUpperCase())) {
+			factor1 = 0;
+		}
+		else if(strLoc.toUpperCase().contains(address[3].toUpperCase())) { //Same country
+			factor1 = 5;
+		}
+		else
+			factor1 = 11;
+		
+		return factor1;
+	}
+}
